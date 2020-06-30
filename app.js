@@ -11,7 +11,6 @@ const MySQLStore = require('express-mysql-session')(session);
 const TWO_HOURS = 1000 * 60 * 60 * 2;
 // const { resolveCname } = require('dns');
 
-
 const {
     PORT= 5000,
     SESS_LIFETIME = TWO_HOURS,
@@ -19,7 +18,7 @@ const {
     HOST = 'localhost',
     USER = 'root',
     PASSWORD = '',
-    DB_NAME = 'Aphrodite',
+    DB_NAME = 'test',
     SESS_SECRET = 'haoPsURXAFxeB0ph',
     NODE_ENV = 'development'
 } = process.env;
@@ -35,14 +34,45 @@ const options = {
 const IN_PROD = NODE_ENV === 'production';
 
 var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "",
-    database: "test"
+    host: HOST,
+    user: USER,
+    password: PASSWORD
+});
+
+var recon = mysql.createConnection({
+    host: HOST,
+    user: USER,
+    password: PASSWORD,
+    database: DB_NAME
 });
 
 con.connect((err) => {
-    if (err) throw err;
+    if (err) console.log(err);
+    console.log('Connected!');
+    con.query(`CREATE DATABASE IF NOT EXISTS ${DB_NAME}`, (err, result) => {
+        if (err) throw err;
+        console.log("Database created");
+    });
+
+    var userSql = "CREATE TABLE IF NOT EXISTS users (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(255) NOT NULL UNIQUE, email VARCHAR(255) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL)";
+    var messageSql = "CREATE TABLE IF NOT EXISTS messages (id INT AUTO_INCREMENT PRIMARY KEY, sender VARCHAR(255) NOT NULL, message VARCHAR(255) NOT NULL, destination VARCHAR(255) NOT NULL)";
+    var notificationsSql = "CREATE TABLE IF NOT EXISTS notifications (id INT AUTO_INCREMENT PRIMARY KEY, notifyUser VARCHAR(255) NOT NULL, messages VARCHAR(255) NOT NULL)";
+    
+    recon.query(userSql, function (err, result) {
+      if (err) throw err;
+      console.log("Users Table created");
+    });
+
+    recon.query(messageSql, function (err, result) {
+        if (err) throw err;
+        console.log("Messages Table created");
+    });
+
+    recon.query(notificationsSql, function (err, result) {
+        if (err) throw err;
+        console.log("Notifications Table created");
+    });
+    
 });
 
 app.set('trust proxy', 1); // trust first proxy
@@ -95,8 +125,8 @@ app.get('/signup', (req, res) => {
 
 app.post('/signup', (req, res) => {
     if (req.body.username && req.body.email && req.body.password) {
-        con.query(`SELECT * FROM users`, (err, result) => {
-            // con.query(`SELECT * FROM users WHERE username = '${req.body.username}' OR email = '${req.body.email}' LIMIT 1`, (err, result) => {
+        recon.query(`SELECT * FROM users`, (err, result) => {
+            // recon.query(`SELECT * FROM users WHERE username = '${req.body.username}' OR email = '${req.body.email}' LIMIT 1`, (err, result) => {
             result.forEach((item, index, array) => {
                 if (item.username === req.body.username || item.email === req.body.email) {
                     console.log('User already exists, please try again');
@@ -104,7 +134,7 @@ app.post('/signup', (req, res) => {
                 }else if (index === (result.length - 1) && item.username !== req.body.username && item.email !== req.body.email) {
                     bcrypt.hash(req.body.password, 10, (err, hash) => {
                         if (err) throw err;
-                        con.query(`INSERT INTO users (username, email, password) VALUES (?, ?, ?)`,[req.body.username, req.body.email, hash], (err, result) => {
+                        recon.query(`INSERT INTO users (username, email, password) VALUES (?, ?, ?)`,[req.body.username, req.body.email, hash], (err, result) => {
                             if (err) throw err;
                             console.log('1 query has been inserted');
                             return res.redirect('/login');;
@@ -133,9 +163,9 @@ app.get('/logout', redirectLogin,  (req, res) => {
 
 app.post('/login', (req, res) => {
     if (req.body.login && req.body.password) {
-        con.query(`SELECT * FROM users WHERE username = '${req.body.login}' LIMIT 1`, (err, result) => {
+        recon.query(`SELECT * FROM users WHERE username = '${req.body.login}' LIMIT 1`, (err, result) => {
             if (err) throw err;
-            console.log(result)
+            // console.log(result);
             if (result.length === 0) {
                 return console.log('User does not exist. Please register user.');
             }else {
@@ -160,7 +190,7 @@ app.post('/login', (req, res) => {
 });
 
 app.get('/contact', redirectLogin, (req, res) => {
-    con.query(`SELECT username FROM users WHERE username != '${req.session.username}'`, (err, result) => {
+    recon.query(`SELECT username FROM users WHERE username != '${req.session.username}'`, (err, result) => {
         if (err) throw err;
         // console.log(result);
         res.render('pages/contact', {

@@ -31,7 +31,7 @@
             <div id="contactOutput">
                 <% if (users !== undefined) { %>
                     <% users.forEach(function (result) { %>
-                        <p><a href="#"><%=result.username%></a></p>
+                        <p><a id="user" href="#"><%=result.username%></a></p>
                     <% }); %>
                 <% } %>
             </div>
@@ -42,8 +42,8 @@
         <input type="text" name="message" id="message" placeholder="Message">
         <button id="send">Send</button> -->
     </div>
-    <!-- <script src="/socket.io/socket.io.js"></script> -->
-    <!-- <script src="/js/chat.js"></script> -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/js/chat.js"></script>
     <script>
     </script>
 </body>
