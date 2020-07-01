@@ -9,6 +9,7 @@ const bcrypt = require('bcrypt');
 const session = require('express-session');
 const MySQLStore = require('express-mysql-session')(session);
 const TWO_HOURS = 1000 * 60 * 60 * 2;
+const formatMessage = require('./utils/messages')
 // const { resolveCname } = require('dns');
 
 const {
@@ -119,6 +120,13 @@ app.get('/', redirectLogin, (req, res) => {
     });
 });
 
+// app.get('/:user', redirectLogin, (req, res) => {
+
+//     res.render('pages/index', {
+//         username: req.session.username
+//     });
+// });
+
 app.get('/signup', (req, res) => {
     res.render('pages/signup');
 });
@@ -200,14 +208,50 @@ app.get('/contact', redirectLogin, (req, res) => {
 });
 
 io.on('connect', (socket) => {
-    console.log(`Connected...`);
+    // console.log(`Connected...`);
 
-    socket.on('chat', (data) => {
-        io.sockets.emit('message', data);
+    const chatBot = 'nnilChat Bot';
+    socket.on('joinRoom', ({username, room}) => {
+        socket.join(room);
+        console.log(username);
+        console.log(room)
+        socket.emit('message', formatMessage(chatBot,`Welcome to ${room}!`));
+        // socket.broadcast.to(room).emit('message', formatMessage(chatBot ,'A user has joined the chat'));
+        socket.broadcast.to(room).emit('message', `A user has joined the chat`);
+        // socket.broadcast.to(room).emit('message', `${username} has joined the chat`);
+
+        socket.on('chat', (data) => {
+            console.log(data);
+            // io.sockets.emit('message', data);
+            // socket.broadcast.in(room).emit('message', formatMessage(data.handle ,data.message)); /// This broadcasts to all but self
+            io.sockets.in(room).emit('message', formatMessage(data.handle ,data.message)); /// This broadcasts to all including self
+        });
     });
+
+    // recon.query(`SELECT username FROM users WHERE username != '${req.session.username}'`, (err, result) => {
+    //     if (err) throw err;
+    //     // console.log(result);
+    //     res.render('pages/contact', {
+    //         users: result
+    //     });
+    // });
+    
+
+    /* socket.on('chat', (data) => {
+        console.log(data);
+        // io.sockets.emit('message', data);
+        io.sockets.emit('message', formatMessage(data.handle ,data.message));
+    }); */
 
     socket.on('typing', (data) => {
         socket.broadcast.emit('check', data);
+    });
+
+    // Broadcast when user connects
+
+    //Broadcast when user disconnects
+    socket.on('disconnect', () => {
+        io.emit('message', formatMessage(chatBot, 'A user has left the chat'));
     });
 });
 

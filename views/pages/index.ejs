@@ -32,11 +32,13 @@
             <div id="output"></div>
             <div id="feedback"></div>
         </div>
+
         <label for="message"><%=username%>:</label>
         <input type="hidden" name="handle" id="handle" value="<%=(typeof username != "undefined" ? username : "")%>">
         <input type="text" name="message" id="message" placeholder="Message">
-        <button id="send">Send</button>
+        <button type="submit" id="send">Send</button>
     </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.9.4/qs.min.js" integrity="sha256-ijqLssetA1NMNjZ+w1zaUafQQLm4IW5OoM8O+4tatME=" crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/js/chat.js"></script>
 </body>
