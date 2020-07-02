@@ -16,13 +16,35 @@ const {username, room} = Qs.parse(location.search, {
 // console.log(username, room);
 
 //Join chat room
-socket.emit('joinRoom', {
-    username,
-    room
-})
+if (username !== undefined && room !== undefined) {
+    socket.emit('joinRoom', {
+        username,
+        room
+    });
+
+    socket.on('messageRoom', (data) => {
+        // output.innerHTML += `<p><strong>${data.handle}</strong> : ${data.message}</p>`;
+        anOutput(data);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    });
+
+    // socket.on('userleft', (data) => {
+    //     console.log(data);
+    //     // output.innerHTML += `<p><strong>${data.username}</strong> <em>${data.time}</em>: ${data.message}</p>`;
+    // });
+
+    function anOutput(data) {
+        output.innerHTML += `<p><strong>${data.username}</strong> <em>${data.time}</em>: ${data.message}</p>`;
+    }
+}
 
 sendBtn.addEventListener('click', () => {
     socket.emit('chat', {
+        handle: handle.value,
+        message: message.value
+    });
+
+    socket.emit('chatmsg', {
         handle: handle.value,
         message: message.value
     });
@@ -42,15 +64,16 @@ feedback.addEventListener('keypress', () => {
 // contactUser.addEventListener('click', () => {
 //     socket.emit('chatRoom', )
 // });
+if (username === undefined && room === undefined) {
+    socket.on('message', (data) => {
+        // output.innerHTML += `<p><strong>${data.handle}</strong> : ${data.message}</p>`;
+        daoutput(data);
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+    });
 
-socket.on('message', (data) => {
-    // output.innerHTML += `<p><strong>${data.handle}</strong> : ${data.message}</p>`;
-    daoutput(data);
-    chatWindow.scrollTop = chatWindow.scrollHeight;
-});
-
-function daoutput(data) {
-    output.innerHTML += `<p><strong>${data.username}</strong> <em>${data.time}</em>: ${data.message}</p>`;
+    function daoutput(data) {
+        output.innerHTML += `<p><strong>${data.username}</strong> <em>${data.time}</em>: ${data.message}</p>`;
+    }
 }
 
 socket.on('check', (data) => {

@@ -215,16 +215,18 @@ io.on('connect', (socket) => {
         socket.join(room);
         console.log(username);
         console.log(room)
-        socket.emit('message', formatMessage(chatBot,`Welcome to ${room}!`));
-        // socket.broadcast.to(room).emit('message', formatMessage(chatBot ,'A user has joined the chat'));
-        socket.broadcast.to(room).emit('message', `A user has joined the chat`);
-        // socket.broadcast.to(room).emit('message', `${username} has joined the chat`);
+        socket.emit('messageRoom', formatMessage(chatBot,`Welcome to ${room}!`));
+        socket.broadcast.to(room).emit('messageRoom', formatMessage(chatBot ,`${username} has joined the chat`));
 
         socket.on('chat', (data) => {
             console.log(data);
             // io.sockets.emit('message', data);
             // socket.broadcast.in(room).emit('message', formatMessage(data.handle ,data.message)); /// This broadcasts to all but self
-            io.sockets.in(room).emit('message', formatMessage(data.handle ,data.message)); /// This broadcasts to all including self
+            io.sockets.in(room).emit('messageRoom', formatMessage(data.handle ,data.message)); /// This broadcasts to all including self
+        });
+
+        socket.on('disconnect', () => {
+            io.sockets.in(room).emit('messageRoom', formatMessage(chatBot, `${username} has left the chat`));
         });
     });
 
@@ -237,11 +239,10 @@ io.on('connect', (socket) => {
     // });
     
 
-    /* socket.on('chat', (data) => {
-        console.log(data);
+    socket.on('chat', (data) => {
         // io.sockets.emit('message', data);
         io.sockets.emit('message', formatMessage(data.handle ,data.message));
-    }); */
+    });
 
     socket.on('typing', (data) => {
         socket.broadcast.emit('check', data);
@@ -250,9 +251,9 @@ io.on('connect', (socket) => {
     // Broadcast when user connects
 
     //Broadcast when user disconnects
-    socket.on('disconnect', () => {
-        io.emit('message', formatMessage(chatBot, 'A user has left the chat'));
-    });
+    // socket.on('disconnect', () => {
+    //     io.emit('message', formatMessage(chatBot, 'A user has left the chat'));
+    // });
 });
 
 http.listen(PORT, () => console.log(`Listening on port ${PORT}!`));
