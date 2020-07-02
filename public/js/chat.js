@@ -19,6 +19,7 @@ const {username, room} = Qs.parse(location.search, {
 if (username !== undefined && room !== undefined) {
     socket.emit('joinRoom', {
         username,
+        handle: handle.value,
         room
     });
 
